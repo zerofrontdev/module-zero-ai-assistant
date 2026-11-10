@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    Conversations (one admin user's each), their messages as the Anthropic
+    API's content blocks, the images uploaded into them, and the changes the
+    assistant proposed: what, for whom, and what became of it (the journal).
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="zero_ai_conversation" resource="default" engine="innodb" comment="Zero AI Assistant Conversation">
+        <column xsi:type="int" name="conversation_id" unsigned="true" nullable="false" identity="true" comment="Conversation ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="false" comment="Admin User ID"/>
+        <column xsi:type="varchar" name="title" nullable="false" length="255" default="" comment="Title"/>
+        <column xsi:type="mediumtext" name="summary" nullable="true" comment="What the older messages said, for the model"/>
+        <column xsi:type="int" name="summary_upto" unsigned="true" nullable="true" comment="The last message the summary covers"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="conversation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_CONVERSATION_USER_ID_ADMIN_USER_USER_ID"
+                    table="zero_ai_conversation" column="user_id" referenceTable="admin_user" referenceColumn="user_id" onDelete="CASCADE"/>
+        <index referenceId="ZERO_AI_CONVERSATION_USER_ID" indexType="btree">
+            <column name="user_id"/>
+        </index>
+    </table>
+    <table name="zero_ai_message" resource="default" engine="innodb" comment="Zero AI Assistant Message">
+        <column xsi:type="int" name="message_id" unsigned="true" nullable="false" identity="true" comment="Message ID"/>
+        <column xsi:type="int" name="conversation_id" unsigned="true" nullable="false" comment="Conversation ID"/>
+        <column xsi:type="varchar" name="role" nullable="false" length="10" comment="user or assistant"/>
+        <column xsi:type="mediumtext" name="content" nullable="false" comment="Content Blocks (JSON)"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="message_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_MESSAGE_CONVERSATION_ID_ZERO_AI_CONVERSATION_CONVERSATION_ID"
+                    table="zero_ai_message" column="conversation_id" referenceTable="zero_ai_conversation" referenceColumn="conversation_id" onDelete="CASCADE"/>
+    </table>
+    <table name="zero_ai_upload" resource="default" engine="innodb" comment="Zero AI Assistant Upload">
+        <column xsi:type="int" name="upload_id" unsigned="true" nullable="false" identity="true" comment="Upload ID"/>
+        <column xsi:type="int" name="conversation_id" unsigned="true" nullable="false" comment="Conversation ID"/>
+        <column xsi:type="varchar" name="file" nullable="false" length="255" comment="File in var/zero_ai_assistant"/>
+        <column xsi:type="varchar" name="name" nullable="false" length="255" comment="Original Name"/>
+        <column xsi:type="varchar" name="mime" nullable="false" length="32" comment="Media Type"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="upload_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_UPLOAD_CONVERSATION_ID_ZERO_AI_CONVERSATION_CONVERSATION_ID"
+                    table="zero_ai_upload" column="conversation_id" referenceTable="zero_ai_conversation" referenceColumn="conversation_id" onDelete="CASCADE"/>
+    </table>
+    <table name="zero_ai_action" resource="default" engine="innodb" comment="Zero AI Assistant Proposed Change">
+        <column xsi:type="int" name="action_id" unsigned="true" nullable="false" identity="true" comment="Action ID"/>
+        <column xsi:type="int" name="conversation_id" unsigned="true" nullable="false" comment="Conversation ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="false" comment="Admin User ID"/>
+        <column xsi:type="varchar" name="tool" nullable="false" length="64" comment="Tool"/>
+        <column xsi:type="text" name="input" nullable="false" comment="Input (JSON)"/>
+        <column xsi:type="text" name="preview" nullable="false" comment="What the Admin Confirms (JSON)"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="10" default="proposed" comment="proposed, running, done, cancelled, failed, undone, expired"/>
+        <column xsi:type="text" name="result" nullable="true" comment="Result or Error"/>
+        <column xsi:type="mediumtext" name="undo" nullable="true" comment="What Undo puts back (JSON), for a change that can be undone"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="action_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_ACTION_CONVERSATION_ID_ZERO_AI_CONVERSATION_CONVERSATION_ID"
+                    table="zero_ai_action" column="conversation_id" referenceTable="zero_ai_conversation" referenceColumn="conversation_id" onDelete="CASCADE"/>
+        <index referenceId="ZERO_AI_ACTION_STATUS_UPDATED_AT" indexType="btree">
+            <column name="status"/>
+            <column name="updated_at"/>
+        </index>
+    </table>
+    <table name="zero_ai_job" resource="default" engine="innodb" comment="Zero AI Assistant Bulk Job">
+        <column xsi:type="int" name="job_id" unsigned="true" nullable="false" identity="true" comment="Job ID"/>
+        <column xsi:type="int" name="action_id" unsigned="true" nullable="false" comment="The confirmed change"/>
+        <column xsi:type="int" name="conversation_id" unsigned="true" nullable="false" comment="Conversation ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="false" comment="Admin User ID"/>
+        <column xsi:type="text" name="fields" nullable="false" comment="Fields written (JSON)"/>
+        <column xsi:type="text" name="brief" nullable="false" comment="What to write"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="12" default="running" comment="running, done, cancelled, undoing, undone"/>
+        <column xsi:type="int" name="total" unsigned="true" nullable="false" default="0" comment="Products"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="job_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_JOB_ACTION_ID_ZERO_AI_ACTION_ACTION_ID"
+                    table="zero_ai_job" column="action_id" referenceTable="zero_ai_action" referenceColumn="action_id" onDelete="CASCADE"/>
+        <index referenceId="ZERO_AI_JOB_ACTION_ID" indexType="btree">
+            <column name="action_id"/>
+        </index>
+    </table>
+    <table name="zero_ai_job_item" resource="default" engine="innodb" comment="Zero AI Assistant Bulk Job Product">
+        <column xsi:type="int" name="item_id" unsigned="true" nullable="false" identity="true" comment="Item ID"/>
+        <column xsi:type="int" name="job_id" unsigned="true" nullable="false" comment="Job ID"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" comment="Product ID"/>
+        <column xsi:type="varchar" name="sku" nullable="false" length="64" comment="SKU"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="10" default="pending" comment="pending, done, failed, skipped, undone"/>
+        <column xsi:type="mediumtext" name="before" nullable="true" comment="The fields before (JSON)"/>
+        <column xsi:type="mediumtext" name="after" nullable="true" comment="The fields written (JSON)"/>
+        <column xsi:type="text" name="error" nullable="true" comment="Error"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="item_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="ZERO_AI_JOB_ITEM_JOB_ID_ZERO_AI_JOB_JOB_ID"
+                    table="zero_ai_job_item" column="job_id" referenceTable="zero_ai_job" referenceColumn="job_id" onDelete="CASCADE"/>
+        <index referenceId="ZERO_AI_JOB_ITEM_JOB_ID_STATUS" indexType="btree">
+            <column name="job_id"/>
+            <column name="status"/>
+        </index>
+        <index referenceId="ZERO_AI_JOB_ITEM_STATUS_UPDATED_AT" indexType="btree">
+            <column name="status"/>
+            <column name="updated_at"/>
+        </index>
+    </table>
+</schema>

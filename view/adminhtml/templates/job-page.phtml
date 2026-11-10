@@ -1,0 +1,33 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * A bulk job's own page: which change it is, its card (job.phtml: progress,
+ * Stop, Undo All), and its conversation while Chat in the Admin is on.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$data = $block->getData('job');
+?>
+<div class="zero-ai-job-page">
+    <?php if (!$data): ?>
+        <div class="message message-notice notice">
+            <div><?= $escaper->escapeHtml(__('No bulk job #%1 of yours, or your role can\'t write products in bulk.', (int) $block->getData('job_id'))) ?></div>
+        </div>
+    <?php else: ?>
+        <?php $job = $data['job']; ?>
+        <h2><?= $escaper->escapeHtml(__('Change #%1', (int) $job['action_id'])) ?></h2>
+        <div class="zero-ai-action">
+            <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::job.phtml')) ?>
+        </div>
+        <?php if ($chat->isAdminChatOn()): ?>
+            <p>
+                <a href="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/index', ['id' => (int) $job['conversation_id']])) ?>"><?= $escaper->escapeHtml(__('Back to the conversation')) ?></a>
+            </p>
+        <?php endif; ?>
+    <?php endif; ?>
+</div>

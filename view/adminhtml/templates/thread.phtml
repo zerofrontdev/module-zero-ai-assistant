@@ -1,0 +1,60 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * One conversation. After a message (oob) also a fresh message form and the
+ * conversation list.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$conversationId = (int) $block->getData('conversation_id');
+$items = $chat->items($conversationId);
+?>
+<?php if (!$items && !$block->getData('error')): ?>
+    <div class="zero-ai-empty">
+        <p><?= $escaper->escapeHtml(__('Ask about your store, or have something done: products, categories, pages, orders — as your role allows (the list on the right). Upload photos to create a product from them.')) ?></p>
+    </div>
+<?php endif; ?>
+<?php foreach ($items as $item): ?>
+    <?php if ($item['kind'] === 'compacted'): ?>
+        <div class="zero-ai-compacted" role="note">
+            <span><?= $escaper->escapeHtml(__('Above: summarized for the assistant. It gets a short summary of the older messages and the recent ones in full, so each message costs about the same however long the conversation is.')) ?></span>
+        </div>
+    <?php elseif ($item['kind'] === 'user'): ?>
+        <div class="zero-ai-msg zero-ai-user">
+            <?php if ($item['images']): ?>
+                <div class="zero-ai-images">
+                    <?php foreach ($item['images'] as $uploadId): ?>
+                        <a href="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/image', ['id' => $uploadId])) ?>" target="_blank">
+                            <img src="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/image', ['id' => $uploadId])) ?>" alt="<?= $escaper->escapeHtmlAttr(__('Upload #%1', $uploadId)) ?>" loading="lazy">
+                            <span>#<?= (int) $uploadId ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($item['text'] !== ''): ?><p class="zero-ai-text"><?= $escaper->escapeHtml($item['text']) ?></p><?php endif; ?>
+        </div>
+    <?php elseif ($item['kind'] === 'assistant'): ?>
+        <div class="zero-ai-msg zero-ai-assistant"><?= /* @noEscape */ $item['html'] ?></div>
+    <?php elseif ($item['kind'] === 'tool'): ?>
+        <div class="zero-ai-tool<?= $item['error'] ? ' zero-ai-tool-error' : '' ?>">
+            ◎ <code><?= $escaper->escapeHtml($item['name']) ?></code><?= $item['error'] ? ': ' . $escaper->escapeHtml($item['error']) : '' ?>
+        </div>
+    <?php elseif ($item['kind'] === 'action'): ?>
+        <?php $block->setData('action', $item['action']); ?>
+        <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::action.phtml')) ?>
+    <?php else: ?>
+        <div class="zero-ai-note"><?= $escaper->escapeHtml(preg_replace('/\{.*\}\s*$/u', '', $item['text'])) ?></div>
+    <?php endif; ?>
+<?php endforeach; ?>
+<?php if ($block->getData('error')): ?>
+    <div class="message message-error"><?= $escaper->escapeHtml($block->getData('error')) ?></div>
+<?php endif; ?>
+<?php if ($block->getData('oob')): ?>
+    <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::composer.phtml')) ?>
+    <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::list.phtml')) ?>
+<?php endif; ?>

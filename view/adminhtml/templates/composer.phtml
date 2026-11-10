@@ -1,0 +1,54 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * The message form. After a message it is swapped in afresh (oob): emptied,
+ * with the conversation's id.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+?>
+<form id="zero-ai-composer" class="zero-ai-composer"<?= $block->getData('oob') ? ' hx-swap-oob="true"' : '' ?>
+      method="post" enctype="multipart/form-data"
+      action="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/send')) ?>"
+      hx-post="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/send')) ?>"
+      hx-encoding="multipart/form-data" hx-target="#zero-ai-thread" hx-swap="innerHTML"
+      hx-indicator="#zero-ai-composer" hx-disabled-elt="find button">
+    <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($chat->formKey()) ?>">
+    <input type="hidden" name="conversation_id" value="<?= (int) $block->getData('conversation_id') ?>">
+    <label class="zero-ai-sr" for="zero-ai-message"><?= $escaper->escapeHtml(__('Message')) ?></label>
+    <textarea id="zero-ai-message" name="message" rows="3" placeholder="<?= $escaper->escapeHtmlAttr(__('Ask, or describe what to do. E.g. "Show today\'s new orders" or "Create a product from these photos"')) ?>"></textarea>
+    <?php $commands = $chat->commands(); ?>
+    <?php if ($commands): ?>
+        <ul class="zero-ai-commands" data-zero-ai-commands hidden role="listbox" aria-label="<?= $escaper->escapeHtmlAttr(__('Commands')) ?>">
+            <?php foreach ($commands as $name => $command): ?>
+                <li><button type="button" data-command="<?= $escaper->escapeHtmlAttr($name) ?>">
+                    <code>/<?= $escaper->escapeHtml($name) ?></code>
+                    <span><?= $escaper->escapeHtml($command['label']) ?></span>
+                    <?php if ($command['example'] !== ''): ?><small><?= $escaper->escapeHtml('/' . $name . ' ' . $command['example']) ?></small><?php endif; ?>
+                </button></li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+    <div class="zero-ai-composer-bar">
+        <label class="zero-ai-attach">
+            <span><?= $escaper->escapeHtml(__('Images')) ?></span>
+            <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+        </label>
+        <button type="button" class="zero-ai-mic" data-zero-ai-mic hidden aria-pressed="false"
+                data-lang="<?= $escaper->escapeHtmlAttr($chat->speechLanguage()) ?>"
+                data-start="<?= $escaper->escapeHtmlAttr(__('Dictate')) ?>"
+                data-stop="<?= $escaper->escapeHtmlAttr(__('Listening… click to stop')) ?>"
+                data-denied="<?= $escaper->escapeHtmlAttr(__('The browser has no access to the microphone: allow it in the address bar.')) ?>"
+                title="<?= $escaper->escapeHtmlAttr(__('Dictate')) ?>">
+            <span aria-hidden="true">🎤</span> <span><?= $escaper->escapeHtml(__('Dictate')) ?></span>
+        </button>
+        <?php if ($commands): ?><span class="zero-ai-hint"><?= $escaper->escapeHtml(__('Type / for commands')) ?></span><?php endif; ?>
+        <span class="zero-ai-busy" role="status"><?= $escaper->escapeHtml(__('Thinking… a turn with several steps can take a minute.')) ?></span>
+        <button type="submit" class="action-primary"><?= $escaper->escapeHtml(__('Send')) ?></button>
+    </div>
+</form>

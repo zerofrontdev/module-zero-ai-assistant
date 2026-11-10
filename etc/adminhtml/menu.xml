@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Zero_AiAssistant::chat" title="AI Assistant" translate="title" module="Zero_AiAssistant"
+             sortOrder="11" action="zero_ai/chat/index" resource="Zero_AiAssistant::chat"
+             dependsOnConfig="zero_ai_assistant/general/admin_chat"/>
+    </menu>
+</config>

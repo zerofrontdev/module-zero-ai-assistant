@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    The chat itself. What it can do comes from the role's other resources:
+    each of the assistant's tools needs the resource the same work needs in
+    the admin (products, categories, pages, blocks, orders, invoices…).
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Zero_AiAssistant::chat" title="AI Assistant" translate="title" sortOrder="5">
+                    <!-- Areas: with none ticked, the assistant may do everything the role's other resources allow.
+                         With any ticked, only those areas; a changing tool also needs the area's "change". -->
+                    <resource id="Zero_AiAssistant::areas" title="Limit the assistant to these areas" translate="title" sortOrder="20">
+                        <resource id="Zero_AiAssistant::area_catalog" title="Products and categories: look up" translate="title" sortOrder="10">
+                            <resource id="Zero_AiAssistant::area_catalog_change" title="Products and categories: change" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_cms" title="Pages and blocks: look up" translate="title" sortOrder="20">
+                            <resource id="Zero_AiAssistant::area_cms_change" title="Pages and blocks: change" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_sales" title="Orders: look up" translate="title" sortOrder="30">
+                            <resource id="Zero_AiAssistant::area_sales_change" title="Orders: invoice, ship, comment, hold, cancel" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_system" title="Settings and store status: look up" translate="title" sortOrder="40">
+                            <resource id="Zero_AiAssistant::area_system_change" title="Settings: change; caches: flush; indexes: rebuild" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_blog" title="Blog: look up" translate="title" sortOrder="50">
+                            <resource id="Zero_AiAssistant::area_blog_change" title="Blog: write posts, moderate comments" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_quotes" title="Quote requests: look up" translate="title" sortOrder="60">
+                            <resource id="Zero_AiAssistant::area_quotes_change" title="Quote requests: answer" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_returns" title="Returns: look up" translate="title" sortOrder="70">
+                            <resource id="Zero_AiAssistant::area_returns_change" title="Returns: change status, message the customer" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_staging" title="Scheduled changes: look up" translate="title" sortOrder="80">
+                            <resource id="Zero_AiAssistant::area_staging_change" title="Scheduled changes: schedule" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_reviews" title="Reviews: look up" translate="title" sortOrder="90">
+                            <resource id="Zero_AiAssistant::area_reviews_change" title="Reviews: moderate" translate="title"/>
+                        </resource>
+                        <resource id="Zero_AiAssistant::area_banners" title="Banners: look up" translate="title" sortOrder="100">
+                            <resource id="Zero_AiAssistant::area_banners_change" title="Banners: change slides" translate="title"/>
+                        </resource>
+                    </resource>
+                </resource>
+                <resource id="Magento_Backend::stores">
+                    <resource id="Magento_Backend::stores_settings">
+                        <resource id="Magento_Config::config">
+                            <resource id="Zero_AiAssistant::config" title="Zero AI Assistant" translate="title"/>
+                        </resource>
+                    </resource>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

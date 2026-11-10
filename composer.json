@@ -1,0 +1,60 @@
+{
+    "name": "zerofront/module-zero-ai-assistant",
+    "description": "Zero for Magento Open Source: an AI assistant in the admin for the catalog, content and orders, with confirmation before every change.",
+    "type": "magento2-module",
+    "version": "1.3.9",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "authors": [
+        {
+            "name": "Roman Pasichnyk"
+        }
+    ],
+    "homepage": "https://zerofront.dev",
+    "keywords": [
+        "magento",
+        "magento2",
+        "magento-open-source",
+        "zero",
+        "ai",
+        "assistant",
+        "admin",
+        "claude"
+    ],
+    "require": {
+        "php": "~8.2.0||~8.3.0||~8.4.0",
+        "magento/framework": "103.0.*",
+        "magento/module-authorization": "*",
+        "magento/module-backend": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-inventory": "*",
+        "magento/module-catalog-rule-configurable": "*",
+        "magento/module-cms": "*",
+        "magento/module-config": "*",
+        "magento/module-configurable-product": "*",
+        "magento/module-contact": "*",
+        "magento/module-cron": "*",
+        "magento/module-eav": "*",
+        "magento/module-indexer": "*",
+        "magento/module-mysql-mq": "*",
+        "magento/module-review": "*",
+        "magento/module-sales": "*",
+        "magento/module-shipping": "*",
+        "magento/module-store": "*",
+        "magento/module-user": "*",
+        "zerofront/module-zero-cms": "^1.3.9"
+    },
+    "replace": {
+        "fixstacks/module-zero-ai-assistant": "self.version"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Zero\\AiAssistant\\": ""
+        }
+    }
+}

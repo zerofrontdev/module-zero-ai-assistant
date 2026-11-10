@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    No connection named: RabbitMQ when env.php has queue/amqp, the database queue otherwise.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
+    <exchange name="magento" type="topic">
+        <binding id="zero_ai_bulk" topic="zero.ai.bulk" destination="zero.ai.bulk"/>
+    </exchange>
+</config>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    A product of a bulk job to write, or to put back: {"item_id": 12, "op": "write"|"undo"}.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+    <topic name="zero.ai.bulk" request="string">
+        <handler name="zero_ai_bulk" type="Zero\AiAssistant\Model\Bulk\Consumer" method="process"/>
+    </topic>
+</config>

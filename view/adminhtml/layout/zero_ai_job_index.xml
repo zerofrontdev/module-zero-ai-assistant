@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    A bulk job's own page: the job's card (job.phtml), which HTMX refreshes
+    while it writes or undoes, with Stop and Undo All.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Zero_AiAssistant::css/assistant.css"/>
+        <script src="Zero_AiAssistant::js/htmx.min.js"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Backend\Block\Template" name="zero.ai.job" template="Zero_AiAssistant::job-page.phtml">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Zero\AiAssistant\ViewModel\Chat</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

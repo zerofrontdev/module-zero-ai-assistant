@@ -1,0 +1,76 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * A bulk job inside its change's card: how far it is, the last products
+ * written, Cancel while it writes, Undo once it's over. HTMX refreshes it
+ * every 3 seconds while it writes or undoes.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$data = $block->getData('job');
+if (!$data) {
+    return;
+}
+$job = $data['job'];
+$counts = $data['counts'];
+$total = max(1, (int) $job['total']);
+$finished = ($counts['done'] ?? 0) + ($counts['failed'] ?? 0) + ($counts['skipped'] ?? 0) + ($counts['undone'] ?? 0);
+$busy = in_array($job['status'], ['running', 'undoing'], true);
+$labels = ['running' => __('Writing'), 'done' => __('Written'), 'cancelled' => __('Stopped'), 'undoing' => __('Putting the old texts back'), 'undone' => __('Undone')];
+$status = $chat->url('zero_ai/job/status', ['job_id' => $job['job_id']]);
+$post = function (string $route, string $label, string $class, string $confirm = '') use ($chat, $escaper, $job): void { ?>
+    <form method="post" action="<?= $escaper->escapeUrl($chat->url($route)) ?>"
+          hx-post="<?= $escaper->escapeUrl($chat->url($route)) ?>" hx-target="closest .zero-ai-job" hx-swap="outerHTML"
+          hx-disabled-elt="find button"<?php if ($confirm !== ''): ?> hx-confirm="<?= $escaper->escapeHtmlAttr($confirm) ?>"<?php endif; ?>>
+        <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($chat->formKey()) ?>">
+        <input type="hidden" name="job_id" value="<?= (int) $job['job_id'] ?>">
+        <button type="submit" class="<?= $escaper->escapeHtmlAttr($class) ?>"><?= $escaper->escapeHtml($label) ?></button>
+    </form>
+<?php };
+?>
+<div class="zero-ai-job zero-ai-job-<?= $escaper->escapeHtmlAttr($job['status']) ?>"
+     <?php if ($busy): ?>hx-get="<?= $escaper->escapeUrl($status) ?>" hx-trigger="every 3s" hx-swap="outerHTML"<?php endif; ?>
+     data-zero-ai-job="<?= (int) $job['job_id'] ?>">
+    <p class="zero-ai-job-head">
+        <strong><?= $escaper->escapeHtml($labels[$job['status']] ?? $job['status']) ?></strong>
+        <?= $escaper->escapeHtml(__('%1 of %2 products', $job['status'] === 'undoing' || $job['status'] === 'undone' ? ($counts['undone'] ?? 0) : ($counts['done'] ?? 0), (int) $job['total'])) ?>
+        <?php if (!empty($counts['failed'])): ?>
+            · <span class="zero-ai-job-failed"><?= $escaper->escapeHtml(__('%1 failed', $counts['failed'])) ?></span>
+        <?php endif; ?>
+        <?php if (!empty($counts['skipped'])): ?>
+            · <?= $escaper->escapeHtml(__('%1 skipped', $counts['skipped'])) ?>
+        <?php endif; ?>
+        · <?= $escaper->escapeHtml(__('job #%1', $job['job_id'])) ?>
+    </p>
+    <progress max="<?= (int) $total ?>" value="<?= (int) min($total, $finished) ?>"></progress>
+    <?php if ($data['recent']): ?>
+        <ul class="zero-ai-job-recent">
+            <?php foreach ($data['recent'] as $item): ?>
+                <li>
+                    <code><?= $escaper->escapeHtml($item['sku']) ?></code>
+                    <?php if ($item['status'] === 'failed'): ?>
+                        <span class="zero-ai-job-failed"><?= $escaper->escapeHtml((string) $item['error']) ?></span>
+                    <?php else: ?>
+                        <?php $first = (string) (reset($item['after']) ?: ''); ?>
+                        <span><?= $escaper->escapeHtml(mb_strimwidth(trim((string) preg_replace('/\s+/u', ' ', strip_tags($first))), 0, 140, '…')) ?></span>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+    <div class="zero-ai-action-buttons">
+        <?php if ($job['status'] === 'running'): ?>
+            <?php $post('zero_ai/job/cancel', (string) __('Stop'), 'action-secondary', (string) __('Stop writing? The products written so far keep their new texts.')); ?>
+        <?php elseif (in_array($job['status'], ['done', 'cancelled'], true) && !empty($counts['done'])): ?>
+            <?php $post('zero_ai/job/undo', (string) __('Undo All'), 'action-secondary', (string) __('Put the old texts back on all %1 products?', $counts['done'])); ?>
+        <?php endif; ?>
+    </div>
+    <?php if ($block->getData('job_error')): ?>
+        <p class="zero-ai-action-result zero-ai-action-error"><?= $escaper->escapeHtml((string) $block->getData('job_error')) ?></p>
+    <?php endif; ?>
+</div>

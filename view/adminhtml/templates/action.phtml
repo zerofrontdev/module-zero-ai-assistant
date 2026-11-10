@@ -1,0 +1,79 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * A change the assistant proposed: what it is, Confirm / Cancel while
+ * proposed, then what became of it. HTMX replaces the card.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$action = (array) $block->getData('action');
+if (!$action) {
+    return;
+}
+$preview = (array) ($action['preview'] ?? []);
+$status = (string) $action['status'];
+$labels = ['proposed' => __('Waiting for you'), 'done' => __('Done'), 'cancelled' => __('Cancelled'), 'failed' => __('Failed'), 'undone' => __('Undone'), 'running' => __('Running'), 'expired' => __('Expired')];
+$job = $chat->job($action);
+?>
+<div class="zero-ai-action zero-ai-action-<?= $escaper->escapeHtmlAttr($status) ?>">
+    <div class="zero-ai-action-head">
+        <span aria-hidden="true">✎</span>
+        <strong><?= $escaper->escapeHtml($preview['title'] ?? $action['tool']) ?></strong>
+        <span class="zero-ai-action-status"><?= $escaper->escapeHtml($labels[$status] ?? $status) ?> · #<?= (int) $action['action_id'] ?></span>
+    </div>
+    <?php if (!empty($preview['lines'])): ?>
+        <dl>
+            <?php foreach ($preview['lines'] as $label => $value): ?>
+                <dt><?= $escaper->escapeHtml($label) ?></dt><dd><?= $escaper->escapeHtml($value) ?></dd>
+            <?php endforeach; ?>
+        </dl>
+    <?php endif; ?>
+    <?php if ($status === 'proposed'): ?>
+        <div class="zero-ai-action-buttons">
+            <?php foreach (['confirm' => __('Confirm'), 'cancel' => __('Cancel')] as $what => $label): ?>
+                <form method="post" action="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/confirm')) ?>"
+                      hx-post="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/confirm')) ?>"
+                      hx-target="closest .zero-ai-action" hx-swap="outerHTML" hx-disabled-elt="find button">
+                    <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($chat->formKey()) ?>">
+                    <input type="hidden" name="action_id" value="<?= (int) $action['action_id'] ?>">
+                    <?php if ($what === 'cancel'): ?><input type="hidden" name="cancel" value="1"><?php endif; ?>
+                    <button type="submit" class="<?= $what === 'confirm' ? 'action-primary' : 'action-secondary' ?>"><?= $escaper->escapeHtml($label) ?></button>
+                </form>
+            <?php endforeach; ?>
+        </div>
+    <?php elseif ($job !== null): ?>
+        <?php $block->setData('job', $job); ?>
+        <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::job.phtml')) ?>
+    <?php elseif ($status === 'done' || $status === 'undone'): ?>
+        <?php $result = $chat->result($action); ?>
+        <p class="zero-ai-action-result">
+            <?php foreach ($result as $key => $value): ?>
+                <?php if ($key === 'edit_url'): ?>
+                    <a href="<?= $escaper->escapeUrl((string) $value) ?>" target="_blank"><?= $escaper->escapeHtml(__('Open in the admin')) ?></a>
+                <?php elseif (is_scalar($value)): ?>
+                    <span><?= $escaper->escapeHtml($key) ?>: <?= $escaper->escapeHtml((string) $value) ?></span>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </p>
+        <?php if ($chat->canUndo($action)): ?>
+            <form class="zero-ai-action-buttons" method="post" action="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/undo')) ?>"
+                  hx-post="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/undo')) ?>"
+                  hx-target="closest .zero-ai-action" hx-swap="outerHTML" hx-disabled-elt="find button"
+                  hx-confirm="<?= $escaper->escapeHtmlAttr(__('Put back what this change overwrote?')) ?>">
+                <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($chat->formKey()) ?>">
+                <input type="hidden" name="action_id" value="<?= (int) $action['action_id'] ?>">
+                <button type="submit" class="action-secondary"><?= $escaper->escapeHtml(__('Undo')) ?></button>
+            </form>
+        <?php endif; ?>
+    <?php elseif ($status === 'failed'): ?>
+        <p class="zero-ai-action-result"><?= $escaper->escapeHtml((string) $action['result']) ?></p>
+    <?php endif; ?>
+    <?php if ($block->getData('action_error')): ?>
+        <p class="zero-ai-action-result zero-ai-action-error"><?= $escaper->escapeHtml((string) $block->getData('action_error')) ?></p>
+    <?php endif; ?>
+</div>

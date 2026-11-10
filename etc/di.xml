@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    The assistant's tools. Another module adds its own here (an item
+    implementing Model\Tool\ToolInterface); the role's ACL decides who gets it.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Zero\AiAssistant\Model\Tools">
+        <arguments>
+            <argument name="tools" xsi:type="array">
+                <item name="search_products" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\SearchProducts</item>
+                <item name="get_product" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\GetProduct</item>
+                <item name="create_product" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\CreateProduct</item>
+                <item name="update_product" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\UpdateProduct</item>
+                <item name="bulk_write_products" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\BulkWriteProducts</item>
+                <item name="list_categories" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\ListCategories</item>
+                <item name="save_category" xsi:type="object">Zero\AiAssistant\Model\Tool\Catalog\SaveCategory</item>
+                <item name="search_cms_pages" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\SearchPages</item>
+                <item name="get_cms_page" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\GetPage</item>
+                <item name="save_cms_page" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\SavePage</item>
+                <item name="search_cms_blocks" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\SearchBlocks</item>
+                <item name="get_cms_block" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\GetBlock</item>
+                <item name="save_cms_block" xsi:type="object">Zero\AiAssistant\Model\Tool\Cms\SaveBlock</item>
+                <item name="list_orders" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\ListOrders</item>
+                <item name="get_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\GetOrder</item>
+                <item name="invoice_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\InvoiceOrder</item>
+                <item name="ship_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\ShipOrder</item>
+                <item name="comment_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\CommentOrder</item>
+                <item name="hold_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\HoldOrder</item>
+                <item name="unhold_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\UnholdOrder</item>
+                <item name="cancel_order" xsi:type="object">Zero\AiAssistant\Model\Tool\Sales\CancelOrder</item>
+                <item name="store_status" xsi:type="object">Zero\AiAssistant\Model\Tool\System\Status</item>
+                <item name="flush_cache" xsi:type="object">Zero\AiAssistant\Model\Tool\System\FlushCache</item>
+                <item name="reindex" xsi:type="object">Zero\AiAssistant\Model\Tool\System\Reindex</item>
+                <item name="get_settings" xsi:type="object">Zero\AiAssistant\Model\Tool\System\GetSettings</item>
+                <item name="set_settings" xsi:type="object">Zero\AiAssistant\Model\Tool\System\SetSettings</item>
+            </argument>
+            <!-- Tools for other Zero modules: class names, made only when the module is enabled. -->
+            <argument name="modules" xsi:type="array">
+                <item name="Zero_Blog" xsi:type="array">
+                    <item name="search_posts" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\SearchPosts</item>
+                    <item name="get_post" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\GetPost</item>
+                    <item name="list_blog_categories" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\ListCategories</item>
+                    <item name="save_post" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\SavePost</item>
+                    <item name="list_comments" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\ListComments</item>
+                    <item name="moderate_comments" xsi:type="string">Zero\AiAssistant\Model\Tool\Blog\ModerateComments</item>
+                </item>
+                <item name="Zero_Cms" xsi:type="array">
+                    <item name="list_cms_components" xsi:type="string">Zero\AiAssistant\Model\Tool\Cms\ListComponents</item>
+                    <item name="get_cms_components" xsi:type="string">Zero\AiAssistant\Model\Tool\Cms\GetComponents</item>
+                    <item name="save_cms_components" xsi:type="string">Zero\AiAssistant\Model\Tool\Cms\SaveComponents</item>
+                </item>
+                <item name="Zero_QuoteRequest" xsi:type="array">
+                    <item name="list_quote_requests" xsi:type="string">Zero\AiAssistant\Model\Tool\QuoteRequest\ListQuoteRequests</item>
+                    <item name="get_quote_request" xsi:type="string">Zero\AiAssistant\Model\Tool\QuoteRequest\GetQuoteRequest</item>
+                    <item name="answer_quote_request" xsi:type="string">Zero\AiAssistant\Model\Tool\QuoteRequest\AnswerQuoteRequest</item>
+                </item>
+                <item name="Zero_Returns" xsi:type="array">
+                    <item name="list_returns" xsi:type="string">Zero\AiAssistant\Model\Tool\Returns\ListReturns</item>
+                    <item name="get_return" xsi:type="string">Zero\AiAssistant\Model\Tool\Returns\GetReturn</item>
+                    <item name="update_return" xsi:type="string">Zero\AiAssistant\Model\Tool\Returns\UpdateReturn</item>
+                </item>
+                <item name="Zero_Staging" xsi:type="array">
+                    <item name="list_campaigns" xsi:type="string">Zero\AiAssistant\Model\Tool\Staging\ListCampaigns</item>
+                    <item name="schedule_change" xsi:type="string">Zero\AiAssistant\Model\Tool\Staging\ScheduleChange</item>
+                </item>
+                <item name="Zero_Reviews" xsi:type="array">
+                    <item name="list_reviews" xsi:type="string">Zero\AiAssistant\Model\Tool\Reviews\ListReviews</item>
+                    <item name="moderate_reviews" xsi:type="string">Zero\AiAssistant\Model\Tool\Reviews\ModerateReviews</item>
+                </item>
+                <item name="Zero_Banner" xsi:type="array">
+                    <item name="list_banners" xsi:type="string">Zero\AiAssistant\Model\Tool\Banner\ListBanners</item>
+                    <item name="save_slide" xsi:type="string">Zero\AiAssistant\Model\Tool\Banner\SaveSlide</item>
+                </item>
+                <item name="Zero_NovaPoshta" xsi:type="array">
+                    <item name="create_waybill" xsi:type="string">Zero\AiAssistant\Model\Tool\NovaPoshta\CreateWaybill</item>
+                    <item name="track_waybill" xsi:type="string">Zero\AiAssistant\Model\Tool\NovaPoshta\TrackWaybill</item>
+                    <item name="delete_waybill" xsi:type="string">Zero\AiAssistant\Model\Tool\NovaPoshta\DeleteWaybill</item>
+                </item>
+                <item name="Zero_Ukrposhta" xsi:type="array">
+                    <item name="create_ukrposhta_shipment" xsi:type="string">Zero\AiAssistant\Model\Tool\Ukrposhta\CreateShipment</item>
+                    <item name="delete_ukrposhta_shipment" xsi:type="string">Zero\AiAssistant\Model\Tool\Ukrposhta\DeleteShipment</item>
+                </item>
+                <item name="Zero_Checkbox" xsi:type="array">
+                    <item name="fiscal_receipts" xsi:type="string">Zero\AiAssistant\Model\Tool\Checkbox\FiscalReceipts</item>
+                    <item name="send_fiscal_receipts" xsi:type="string">Zero\AiAssistant\Model\Tool\Checkbox\SendFiscalReceipts</item>
+                    <item name="cash_register" xsi:type="string">Zero\AiAssistant\Model\Tool\Checkbox\CashRegister</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Commands for other Zero modules, used when the module is enabled. -->
+    <type name="Zero\AiAssistant\Model\Commands">
+        <arguments>
+            <argument name="modules" xsi:type="array">
+                <item name="Zero_Blog" xsi:type="array">
+                    <item name="post" xsi:type="array">
+                        <item name="area" xsi:type="string">blog</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Write a blog post</item>
+                        <item name="text" xsi:type="string">Write a blog post about {args}: first a short outline, then the full draft (Markdown, 500–900 words, with ## headings), an excerpt, a meta title and description, and tags; then save it as a draft with save_post.</item>
+                        <item name="resource" xsi:type="string">Zero_Blog::posts</item>
+                        <item name="example" xsi:type="string">how to choose a child's winter jacket</item>
+                    </item>
+                    <item name="comments" xsi:type="array">
+                        <item name="area" xsi:type="string">blog</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Moderate blog comments</item>
+                        <item name="text" xsi:type="string">Show the pending blog comments (list_comments) and for each say approve or reject and why; spam and abuse get rejected. Then propose moderate_comments for the ones I agree with.</item>
+                        <item name="resource" xsi:type="string">Zero_Blog::comments</item>
+                    </item>
+                </item>
+                <item name="Zero_QuoteRequest" xsi:type="array">
+                    <item name="quotes" xsi:type="array">
+                        <item name="area" xsi:type="string">quotes</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Answer quote requests</item>
+                        <item name="text" xsi:type="string">Show the unanswered quote requests (list_quote_requests)[ and open #{args}]; for each, the lines with the asked prices, and ask me what to offer.</item>
+                        <item name="resource" xsi:type="string">Zero_QuoteRequest::requests</item>
+                        <item name="example" xsi:type="string">12</item>
+                    </item>
+                </item>
+                <item name="Zero_Returns" xsi:type="array">
+                    <item name="returns" xsi:type="array">
+                        <item name="area" xsi:type="string">returns</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Pending returns</item>
+                        <item name="text" xsi:type="string">Show the pending return requests (list_returns)[ and open {args}] with what the customer asks and what they wrote, and what each can go to next.</item>
+                        <item name="resource" xsi:type="string">Zero_Returns::returns</item>
+                        <item name="example" xsi:type="string">R000012</item>
+                    </item>
+                </item>
+                <item name="Zero_NovaPoshta" xsi:type="array">
+                    <item name="ttn" xsi:type="array">
+                        <item name="area" xsi:type="string">sales</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Nova Poshta documents for orders</item>
+                        <item name="text" xsi:type="string">Find the orders to a Nova Poshta branch that are paid or cash on delivery and have no shipping document yet[: {args}] (list_orders, then track_waybill shows which have one), and propose create_waybill for each, one by one.</item>
+                        <item name="resource" xsi:type="string">Magento_Sales::ship</item>
+                        <item name="example" xsi:type="string">000000123</item>
+                    </item>
+                </item>
+                <item name="Zero_Checkbox" xsi:type="array">
+                    <item name="receipts" xsi:type="array">
+                        <item name="area" xsi:type="string">sales</item>
+                        <item name="changes" xsi:type="boolean">false</item>
+                        <item name="label" xsi:type="string">Fiscal receipts: what failed</item>
+                        <item name="text" xsi:type="string">Show the cash register (cash_register) and the fiscal receipts not done yet (fiscal_receipts)[ for order {args}], say why they failed, and offer send_fiscal_receipts for those that can be sent again.</item>
+                        <item name="resource" xsi:type="string">Magento_Sales::sales_order</item>
+                    </item>
+                </item>
+                <item name="Zero_Reviews" xsi:type="array">
+                    <item name="reviews" xsi:type="array">
+                        <item name="area" xsi:type="string">reviews</item>
+                        <item name="changes" xsi:type="boolean">true</item>
+                        <item name="label" xsi:type="string">Moderate reviews</item>
+                        <item name="text" xsi:type="string">Show the pending product reviews (list_reviews) and for each say approve or refuse and why; refuse spam, abuse and reviews that aren't about the product. Then propose moderate_reviews for the ones I agree with.</item>
+                        <item name="resource" xsi:type="string">Magento_Review::pending</item>
+                    </item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\SearchPages" type="Zero\AiAssistant\Model\Tool\Cms\SearchContent">
+        <arguments><argument name="type" xsi:type="string">page</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\GetPage" type="Zero\AiAssistant\Model\Tool\Cms\GetContent">
+        <arguments><argument name="type" xsi:type="string">page</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\SavePage" type="Zero\AiAssistant\Model\Tool\Cms\SaveContent">
+        <arguments><argument name="type" xsi:type="string">page</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\SearchBlocks" type="Zero\AiAssistant\Model\Tool\Cms\SearchContent">
+        <arguments><argument name="type" xsi:type="string">block</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\GetBlock" type="Zero\AiAssistant\Model\Tool\Cms\GetContent">
+        <arguments><argument name="type" xsi:type="string">block</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Cms\SaveBlock" type="Zero\AiAssistant\Model\Tool\Cms\SaveContent">
+        <arguments><argument name="type" xsi:type="string">block</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\InvoiceOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">invoice</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\ShipOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">ship</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\CommentOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">comment</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\HoldOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">hold</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\UnholdOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">unhold</argument></arguments>
+    </virtualType>
+    <virtualType name="Zero\AiAssistant\Model\Tool\Sales\CancelOrder" type="Zero\AiAssistant\Model\Tool\Sales\OrderAction">
+        <arguments><argument name="action" xsi:type="string">cancel</argument></arguments>
+    </virtualType>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="zero_ai_purge" xsi:type="object">Zero\AiAssistant\Console\Command\PurgeCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

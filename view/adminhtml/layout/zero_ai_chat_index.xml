@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+
+    The AI Assistant page. HTMX (a copy of the Zero theme's) sends the
+    messages and confirmations; its own scripts are dictation (the microphone
+    can't be reached otherwise) and the commands list under the message field.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Zero_AiAssistant::css/assistant.css"/>
+        <script src="Zero_AiAssistant::js/htmx.min.js"/>
+        <script src="Zero_AiAssistant::js/dictation.js"/>
+        <script src="Zero_AiAssistant::js/commands.js"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Backend\Block\Template" name="zero.ai.chat" template="Zero_AiAssistant::chat.phtml">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Zero\AiAssistant\ViewModel\Chat</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

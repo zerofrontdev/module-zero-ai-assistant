@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="zero_ai_assistant" translate="label" type="text" sortOrder="96" showInDefault="1">
+            <label>AI Assistant</label>
+            <tab>zero</tab>
+            <resource>Zero_AiAssistant::config</resource>
+            <group id="general" translate="label comment" type="text" sortOrder="10" showInDefault="1">
+                <label>Assistant</label>
+                <comment><![CDATA[A chat with Claude in the admin (the AI Assistant menu item). It uses the AI provider of Zero > CMS > AI: the Anthropic API (its key) or Amazon Bedrock (the server's AWS role, no key). Who may use it: System > User Roles > Role Resources > AI Assistant; what it may do for them: the role's other resources (products, categories, pages, blocks, orders…). Every change it proposes waits for the admin's Confirm.]]></comment>
+                <field id="admin_chat" translate="label comment" type="select" sortOrder="5" showInDefault="1" canRestore="1">
+                    <label>Chat in the Admin</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>No: the AI Assistant page and its menu item are gone for every admin user. The assistant then works only through the Claude connector (Claude Connector below, module Zero_Mcp), where Claude thinks with the admin's own subscription and the store's AI provider is not used (except for bulk product texts). For a store that uses the assistant from the Claude app only.</comment>
+                </field>
+                <field id="model" translate="label" type="select" sortOrder="10" showInDefault="1" canRestore="1">
+                    <label>Model</label>
+                    <source_model>Zero\AiAssistant\Model\Source\Model</source_model>
+                </field>
+                <field id="bedrock_model" translate="label comment" type="text" sortOrder="15" showInDefault="1" canRestore="1">
+                    <label>Bedrock Model ID</label>
+                    <comment>Used instead of Model when Zero > CMS > AI > Provider is Amazon Bedrock: a Bedrock model or inference profile id, e.g. us.anthropic.claude-haiku-4-5-20251001-v1:0.</comment>
+                </field>
+                <field id="keep_exchanges" translate="label comment" type="text" sortOrder="18" showInDefault="1" canRestore="1">
+                    <label>Recent Exchanges Kept in Full</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                    <comment>A conversation's last exchanges (your message and its answer) go to the model in full; the older ones as a short summary, written once the conversation is half as long again. One conversation can then go on for good at about the same cost a message. 10: about 20 messages.</comment>
+                </field>
+                <field id="keep_days" translate="label comment" type="text" sortOrder="19" showInDefault="1" canRestore="1">
+                    <label>Keep Data For, Days</label>
+                    <validate>required-entry validate-digits</validate>
+                    <comment>Messages, uploaded pictures, finished changes (their Undo with them) and bulk jobs older than this are removed every night, and the Claude connector's ended connections too; a conversation goes once nothing is left in it and no live connection uses it. 0: kept for good. bin/magento zero:ai:purge runs it at once.</comment>
+                </field>
+                <field id="instructions" translate="label comment" type="textarea" sortOrder="20" showInDefault="1">
+                    <label>Instructions for the Assistant</label>
+                    <comment>Your store's own rules, added to the assistant's instructions for every conversation. For example: "Write product descriptions in Ukrainian, 3–4 short paragraphs. New products: disabled until checked. SKUs: KK-001, KK-002…". What it can do (its tools, per role) is listed on the AI Assistant page.</comment>
+                </field>
+            </group>
+            <group id="bulk" translate="label comment" type="text" sortOrder="20" showInDefault="1">
+                <label>Bulk Jobs</label>
+                <comment><![CDATA[Texts for many products at once ("/describe", "/empty"…) are written one product at a time by the consumer <code>zero.ai.bulk</code>, which cron starts (RabbitMQ when env.php has <code>queue/amqp</code>, the database queue otherwise). Each product is one request to the model chosen above.]]></comment>
+                <field id="max_products" translate="label comment" type="text" sortOrder="10" showInDefault="1" canRestore="1">
+                    <label>Products per Job</label>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                    <comment>At most this many products in one confirmation.</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

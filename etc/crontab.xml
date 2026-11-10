@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="zero_ai_assistant_purge" instance="Zero\AiAssistant\Cron\Purge" method="execute">
+            <schedule>41 3 * * *</schedule>
+        </job>
+        <job name="zero_ai_assistant_reap" instance="Zero\AiAssistant\Cron\Reap" method="execute">
+            <schedule>*/15 * * * *</schedule>
+        </job>
+    </group>
+</config>

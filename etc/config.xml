@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+    Copyright © 2026 Roman Pasichnyk
+    SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <zero_ai_assistant>
+            <general>
+                <admin_chat>1</admin_chat>
+                <model>claude-haiku-4-5-20251001</model>
+                <bedrock_model>us.anthropic.claude-haiku-4-5-20251001-v1:0</bedrock_model>
+                <keep_exchanges>10</keep_exchanges>
+                <keep_days>90</keep_days>
+            </general>
+            <bulk>
+                <max_products>200</max_products>
+            </bulk>
+        </zero_ai_assistant>
+    </default>
+</config>

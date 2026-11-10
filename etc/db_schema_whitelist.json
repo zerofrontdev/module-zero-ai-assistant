@@ -1,0 +1,111 @@
+{
+    "zero_ai_conversation": {
+        "column": {
+            "conversation_id": true,
+            "user_id": true,
+            "title": true,
+            "created_at": true,
+            "updated_at": true,
+            "summary": true,
+            "summary_upto": true
+        },
+        "index": {
+            "ZERO_AI_CONVERSATION_USER_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "ZERO_AI_CONVERSATION_USER_ID_ADMIN_USER_USER_ID": true
+        }
+    },
+    "zero_ai_message": {
+        "column": {
+            "message_id": true,
+            "conversation_id": true,
+            "role": true,
+            "content": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_AF1192BDAD71C5BCDB24FB250A07C082": true
+        }
+    },
+    "zero_ai_upload": {
+        "column": {
+            "upload_id": true,
+            "conversation_id": true,
+            "file": true,
+            "name": true,
+            "mime": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_1BF2C81EE7C72D4AE858B923F007FA18": true
+        }
+    },
+    "zero_ai_action": {
+        "column": {
+            "action_id": true,
+            "conversation_id": true,
+            "user_id": true,
+            "tool": true,
+            "input": true,
+            "preview": true,
+            "status": true,
+            "result": true,
+            "created_at": true,
+            "updated_at": true,
+            "undo": true
+        },
+        "index": {
+            "ZERO_AI_ACTION_STATUS_UPDATED_AT": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_FEF5780AB0C81B86404AC292F5CE394F": true
+        }
+    },
+    "zero_ai_job": {
+        "column": {
+            "job_id": true,
+            "action_id": true,
+            "conversation_id": true,
+            "user_id": true,
+            "fields": true,
+            "brief": true,
+            "status": true,
+            "total": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "ZERO_AI_JOB_ACTION_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "ZERO_AI_JOB_ACTION_ID_ZERO_AI_ACTION_ACTION_ID": true
+        }
+    },
+    "zero_ai_job_item": {
+        "column": {
+            "item_id": true,
+            "job_id": true,
+            "product_id": true,
+            "sku": true,
+            "status": true,
+            "before": true,
+            "after": true,
+            "error": true,
+            "updated_at": true
+        },
+        "index": {
+            "ZERO_AI_JOB_ITEM_JOB_ID_STATUS": true,
+            "ZERO_AI_JOB_ITEM_STATUS_UPDATED_AT": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "ZERO_AI_JOB_ITEM_JOB_ID_ZERO_AI_JOB_JOB_ID": true
+        }
+    }
+}

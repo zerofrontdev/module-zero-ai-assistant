@@ -1,0 +1,50 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * The AI Assistant page: conversations, the conversation, the message form,
+ * and what the assistant can do for this admin user (by their role).
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$conversationId = (int) $block->getData('conversation_id');
+?>
+<div class="zero-ai">
+    <aside class="zero-ai-side">
+        <a class="action-primary zero-ai-new" href="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/index')) ?>"><?= $escaper->escapeHtml(__('New conversation')) ?></a>
+        <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::list.phtml')) ?>
+    </aside>
+    <section class="zero-ai-main">
+        <?php if (!$chat->isConfigured()): ?>
+            <div class="message message-warning"><?= $escaper->escapeHtml(__('Add an Anthropic API key in Stores > Configuration > Zero > CMS > AI to use the assistant.')) ?></div>
+        <?php endif; ?>
+        <div class="zero-ai-scroll">
+            <div id="zero-ai-thread" class="zero-ai-thread" aria-live="polite">
+                <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::thread.phtml')) ?>
+            </div>
+        </div>
+        <?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Zero_AiAssistant::composer.phtml')) ?>
+    </section>
+    <aside class="zero-ai-help">
+        <h2><?= $escaper->escapeHtml(__('What I can do for you')) ?></h2>
+        <p class="zero-ai-muted"><?= $escaper->escapeHtml(__('By your role. Changes (✎) wait for your Confirm; reading (◎) runs at once.')) ?></p>
+        <ul class="zero-ai-tools">
+            <?php foreach ($chat->capabilities() as $tool): ?>
+                <li>
+                    <details>
+                        <summary><span aria-hidden="true"><?= $tool['changes'] ? '✎' : '◎' ?></span> <code><?= $escaper->escapeHtml($tool['name']) ?></code></summary>
+                        <p><?= $escaper->escapeHtml($tool['description']) ?></p>
+                    </details>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <p class="zero-ai-muted">
+            <?= $escaper->escapeHtml(__('Your store\'s rules for the assistant:')) ?>
+            <a href="<?= $escaper->escapeUrl($chat->url('adminhtml/system_config/edit', ['section' => 'zero_ai_assistant'])) ?>"><?= $escaper->escapeHtml(__('Instructions for the Assistant')) ?></a>
+        </p>
+    </aside>
+</div>

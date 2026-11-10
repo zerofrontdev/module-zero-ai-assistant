@@ -1,0 +1,20 @@
+<?php
+/**
+ * Copyright © 2026 Roman Pasichnyk
+ * SPDX-License-Identifier: OSL-3.0 OR AFL-3.0
+ *
+ * The admin user's conversations. With `oob`, swapped in by HTMX after a message.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+/** @var \Zero\AiAssistant\ViewModel\Chat $chat */
+$chat = $block->getData('view_model');
+$current = (int) $block->getData('conversation_id');
+?>
+<nav id="zero-ai-list" class="zero-ai-list"<?= $block->getData('oob') ? ' hx-swap-oob="true"' : '' ?> aria-label="<?= $escaper->escapeHtmlAttr(__('Conversations')) ?>">
+    <?php foreach ($chat->conversations() as $conversation): ?>
+        <a href="<?= $escaper->escapeUrl($chat->url('zero_ai/chat/index', ['id' => $conversation['conversation_id']])) ?>"
+           <?= (int) $conversation['conversation_id'] === $current ? 'aria-current="page"' : '' ?>><?= $escaper->escapeHtml($conversation['title']) ?></a>
+    <?php endforeach; ?>
+</nav>
