@@ -9,7 +9,6 @@ namespace Zero\AiAssistant\Test\Unit\Model;
 
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Module\Manager as ModuleManager;
-use Magento\Framework\ObjectManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Zero\AiAssistant\Model\Commands;
 use Magento\Framework\Exception\LocalizedException;
@@ -62,41 +61,64 @@ class ToolsTest extends TestCase
         };
     }
 
-    public function testModuleToolsFollowTheModuleAndTheRole(): void
+    public function testPoolToolsFollowTheirModuleAndTheRole(): void
     {
         $authorization = $this->createStub(AuthorizationInterface::class);
         $authorization->method('isAllowed')->willReturnCallback(static fn (string $r) => $r !== 'Zero_Reviews::denied');
         $modules = $this->createStub(ModuleManager::class);
         $modules->method('isEnabled')->willReturnCallback(static fn (string $m) => $m === 'Zero_Blog');
-        $objectManager = $this->createStub(ObjectManagerInterface::class);
-        $objectManager->method('get')->willReturnCallback(fn (string $class) => match ($class) {
-            \ArrayObject::class => $this->tool('search_posts', 'Zero_Blog::posts'),
-            \ArrayIterator::class => $this->tool('secret', 'Zero_Reviews::denied'),
-            default => $this->fail('a disabled module\'s tool was made: ' . $class),
-        });
-        $tools = new Tools($authorization, $modules, $objectManager, [$this->tool('search_products', 'Magento_Catalog::products')], [
-            'Zero_Blog' => [\ArrayObject::class, \ArrayIterator::class],
-            'Zero_Reviews' => ['ReviewsTool'],
+        $tools = new Tools($authorization, $modules, [
+            'search_products' => $this->tool('search_products', 'Magento_Catalog::products'),
+            'search_posts' => $this->tool('search_posts', 'Zero_Blog::posts'),
+            'secret' => $this->tool('secret', 'Zero_Blog::denied_by_role'),
+            'list_reviews' => $this->tool('list_reviews', 'Zero_Reviews::reviews'),
+        ], [
+            'search_posts' => 'Zero_Blog',
+            'list_reviews' => 'Zero_Reviews',
         ]);
-        $this->assertSame(['search_products', 'search_posts'], array_keys($tools->allowed()));
+        $this->assertSame(['search_products', 'search_posts', 'secret'], array_keys($tools->allowed()));
+        $this->assertSame([], $tools->changingNames());
     }
 
-    public function testAToolClassThePackageDoesNotShipIsLeftOut(): void
+    public function testAToolOfADisabledModuleIsNotTouched(): void
+    {
+        $authorization = $this->createStub(AuthorizationInterface::class);
+        $authorization->method('isAllowed')->willReturn(true);
+        $modules = $this->createStub(ModuleManager::class);
+        $modules->method('isEnabled')->willReturn(false);
+        // No method may be called on it (a \Proxy would not even be built).
+        $off = $this->createMock(ToolInterface::class);
+        $off->expects($this->never())->method($this->anything());
+        $tools = new Tools($authorization, $modules, ['list_returns' => $off], ['list_returns' => 'Zero_Returns']);
+        $this->assertSame([], $tools->allowed());
+        $this->assertSame([], $tools->definitions());
+        $this->assertNull($tools->get('list_returns'));
+    }
+
+    public function testAnEmptyOrUnknownPoolEntryIsIgnored(): void
     {
         $authorization = $this->createStub(AuthorizationInterface::class);
         $authorization->method('isAllowed')->willReturn(true);
         $modules = $this->createStub(ModuleManager::class);
         $modules->method('isEnabled')->willReturn(true);
-        $objectManager = $this->createStub(ObjectManagerInterface::class);
-        $objectManager->method('get')->willReturnCallback(fn (string $class) => match ($class) {
-            \ArrayObject::class => $this->tool('search_posts', 'Zero_Blog::posts'),
-            default => $this->fail('a missing class was made: ' . $class),
-        });
-        $tools = new Tools($authorization, $modules, $objectManager, [], [
-            'Zero_NovaPoshta' => ['Zero\\AiAssistant\\Model\\Tool\\NovaPoshta\\NotShipped'],
-            'Zero_Blog' => [\ArrayObject::class],
-        ]);
-        $this->assertSame(['search_posts'], array_keys($tools->allowed()));
+        $tools = new Tools(
+            $authorization,
+            $modules,
+            ['empty' => null, 'text' => 'Zero\\Nothing', 'list' => [], 'ok' => $this->tool('ok', 'Magento_Catalog::products')],
+            ['ok' => '', 'ghost' => 'Zero_Ghost', 'empty' => 'Zero_Blog']
+        );
+        $this->assertSame(['ok'], array_keys($tools->allowed()));
+    }
+
+    public function testNoRequiresMeansTheToolIsAlwaysThere(): void
+    {
+        $authorization = $this->createStub(AuthorizationInterface::class);
+        $authorization->method('isAllowed')->willReturn(true);
+        $modules = $this->createMock(ModuleManager::class);
+        $modules->expects($this->never())->method('isEnabled');
+        $tools = new Tools($authorization, $modules, ['a' => $this->tool('a', 'r'), 'b' => $this->tool('b', 'r', 'catalog', true)]);
+        $this->assertSame(['a', 'b'], array_keys($tools->allowed()));
+        $this->assertSame(['b'], $tools->changingNames());
     }
 
     public function testARoleLimitedToAreasGetsOnlyThose(): void
@@ -107,7 +129,7 @@ class ToolsTest extends TestCase
             return in_array($r, $granted, true);
         });
         $modules = $this->createStub(ModuleManager::class);
-        $tools = new Tools($authorization, $modules, $this->createStub(ObjectManagerInterface::class), [
+        $tools = new Tools($authorization, $modules, [
             $this->tool('search_products', 'Magento_Catalog::products', 'catalog'),
             $this->tool('list_orders', 'Magento_Sales::sales_order', 'sales'),
             $this->tool('ship_order', 'Magento_Sales::ship', 'sales', true),
@@ -129,10 +151,10 @@ class ToolsTest extends TestCase
         $authorization->method('isAllowed')->willReturn(true);
         $modules = $this->createStub(ModuleManager::class);
         $modules->method('isEnabled')->willReturnCallback(static fn (string $m) => $m === 'Zero_Blog');
-        $commands = new Commands($authorization, $modules, [], [
-            'Zero_Blog' => ['post' => ['label' => 'Write a post', 'text' => 'Write a post about {args}.']],
-            'Zero_Reviews' => ['reviews' => ['label' => 'Reviews', 'text' => 'Show reviews.']],
-        ]);
+        $commands = new Commands($authorization, $modules, [
+            'reviews' => ['label' => 'Reviews', 'text' => 'Show reviews.', 'sort_order' => 70],
+            'post' => ['label' => 'Write a post', 'text' => 'Write a post about {args}.', 'sort_order' => 10],
+        ], ['post' => 'Zero_Blog', 'reviews' => 'Zero_Reviews']);
         $allowed = $commands->allowed();
         $this->assertArrayHasKey('post', $allowed);
         $this->assertArrayHasKey('orders', $allowed, 'the built-in ones stay');
@@ -152,7 +174,7 @@ class ToolsTest extends TestCase
     {
         $authorization = $this->createStub(AuthorizationInterface::class);
         $authorization->method('isAllowed')->willReturnCallback(static fn (string $r) => in_array($r, $granted, true));
-        return new Tools($authorization, $this->createStub(ModuleManager::class), $this->createStub(ObjectManagerInterface::class));
+        return new Tools($authorization, $this->createStub(ModuleManager::class));
     }
 
     public function testARecordAclTheRoleLacksIsRefused(): void
@@ -168,7 +190,7 @@ class ToolsTest extends TestCase
     {
         $authorization = $this->createMock(AuthorizationInterface::class);
         $authorization->expects($this->once())->method('isAllowed')->with('Magento_Review::reviews_all')->willReturn(true);
-        $tools = new Tools($authorization, $this->createStub(ModuleManager::class), $this->createStub(ObjectManagerInterface::class));
+        $tools = new Tools($authorization, $this->createStub(ModuleManager::class));
 
         $tools->authorize($this->recordsTool('Magento_Review::reviews_all'), ['review_ids' => [1, 2]]);
     }
@@ -177,7 +199,7 @@ class ToolsTest extends TestCase
     {
         $authorization = $this->createMock(AuthorizationInterface::class);
         $authorization->expects($this->never())->method('isAllowed');
-        $tools = new Tools($authorization, $this->createStub(ModuleManager::class), $this->createStub(ObjectManagerInterface::class));
+        $tools = new Tools($authorization, $this->createStub(ModuleManager::class));
 
         $tools->authorize($this->tool('search_products', 'Magento_Catalog::products'), ['review_ids' => [1, 2]]);
     }

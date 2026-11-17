@@ -12,6 +12,8 @@ use Magento\Framework\Exception\LocalizedException;
 /**
  * A changing tool whose change can be undone: snapshot() keeps what the
  * change will overwrite (taken just before it runs), restore() puts it back.
+ *
+ * @api
  */
 interface ReversibleInterface
 {

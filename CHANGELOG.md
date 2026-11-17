@@ -1,5 +1,9 @@
 # Changelog: zerofront/module-zero-ai-assistant
 
+## 1.3.11
+
+- The tools and commands for Zero Blog, Banner, Reviews, Returns and Quote Request are no longer in this package: install `zerofront/module-zero-<name>-ai-assistant` for each module you use (suggested by this package). The package no longer needs `magento/module-review`. Nothing in it is fetched through the ObjectManager any more.
+
 ## 1.3.9
 
 - New in the free set (it was a licensed module before): a chat in the admin (menu AI Assistant) that looks up and creates products, categories, CMS pages and blocks, and handles orders, within the admin user's own role. Every change is a card the user confirms first, with Undo.

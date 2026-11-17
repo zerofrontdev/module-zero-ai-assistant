@@ -86,6 +86,15 @@ class UpdateProduct implements ToolInterface, ReversibleInterface
                 $lines += $this->html->summary($field, $this->html->clean($new, $old));
                 continue;
             }
+            if ($field === 'qty') {
+                // The quantity lives in the stock item, not in the product's data.
+                $old = (string) ($product->getExtensionAttributes()?->getStockItem()?->getQty() ?? '');
+            }
+            if (in_array($field, ['price', 'special_price', 'qty'], true)) {
+                // The database gives "34.000000"; the admin reads "34".
+                $old = self::plainNumber($old);
+                $new = self::plainNumber($new);
+            }
             $lines[$field] = mb_substr(strip_tags($old), 0, 80) . ' → ' . mb_substr(strip_tags($new), 0, 200);
         }
         if (!empty($input['add_image_upload_ids'])) {
@@ -93,6 +102,18 @@ class UpdateProduct implements ToolInterface, ReversibleInterface
         }
 
         return ['title' => (string) __('Change product %1 "%2"', $product->getSku(), $product->getName()), 'lines' => $lines];
+    }
+
+    /**
+     * A decimal without its trailing zeros ("34.000000" is "34", "34.50" is
+     * "34.5"); anything else as it is.
+     */
+    private static function plainNumber(string $value): string
+    {
+        if (!is_numeric($value) || !str_contains($value, '.')) {
+            return $value;
+        }
+        return rtrim(rtrim($value, '0'), '.');
     }
 
     /**

@@ -14,6 +14,8 @@ use Magento\Framework\Exception\LocalizedException;
  * Something the assistant can do, offered to Claude only when the admin
  * user's role has resource(). A tool that changes() data runs only after the
  * admin confirms what preview() shows.
+ *
+ * @api
  */
 interface ToolInterface
 {

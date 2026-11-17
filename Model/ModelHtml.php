@@ -23,6 +23,8 @@ namespace Zero\AiAssistant\Model;
  *
  * Markup, classes, data-* attributes and Page Builder's own styles stay:
  * editing a Page Builder page keeps its layout.
+ *
+ * @api
  */
 class ModelHtml
 {

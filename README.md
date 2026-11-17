@@ -78,7 +78,7 @@ for a whole request, sent as written out (the admin sees it):
 
 More come from a module's `etc/di.xml` (`Model\Commands`'s `commands`:
 label, text with `{args}` and optional `[ … ]` kept only with args,
-resource).
+resource, `sort_order`; see "Adding a tool").
 
 ## Bulk jobs
 
@@ -256,51 +256,77 @@ a change its job. That is why each kind is removed by its own rule.
 
 ## Tools of other Zero modules
 
-Tools for a module live here, under `Model/Tool/<Module>`, and are listed
-in `etc/di.xml` under `modules` (class names per module): they are made
-only when that module is enabled, so the module itself needs nothing from
-the assistant (a tool's own classes are fetched when it runs, so the package compiles without them). Commands the same way
-(`Model\Commands`'s `modules`).
+The tools for another Zero module live in a **bridge module** next to it,
+`Zero_<Module>AiAssistant`, not here. Zero_AiAssistant names no class of
+another module, and neither the assistant nor the module needs the other:
+a store installs the bridge when it uses both. A bridge sequences
+Zero_AiAssistant and its module in `module.xml` (and requires both
+packages in composer.json), and adds its tools and commands to the pools
+below in its own `etc/di.xml`.
 
-- **Zero_Blog**: `search_posts`, `get_post`, `list_blog_categories`,
-  `save_post` (the body in Markdown becomes the post's Article component;
-  a photo as the cover; drafts unless asked to publish), `list_comments`,
-  `moderate_comments`. Commands `/post topic` and `/comments`.
-- **Zero_QuoteRequest**: `list_quote_requests`, `get_quote_request`,
-  `answer_quote_request` (prices per line and a note, the customer is
-  emailed; or a decline). Command `/quotes`.
-- **Zero_Returns**: `list_returns`, `get_return` (items, the conversation,
-  the next statuses), `update_return` (status and/or a message, emailed).
-  Command `/returns`.
-- **Zero_Staging**: `list_campaigns`, `schedule_change` (a product or
-  category change from a start to an end: a sale, a renamed category, a
-  product switched off for a period; a new campaign or an existing one).
-- **Zero_Reviews**: `list_reviews` (rating, verified purchase, photos),
-  `moderate_reviews`. Command `/reviews`.
-- **Zero_Banner**: `list_banners`, `save_slide` (a slide's texts, period,
-  position, its picture from an uploaded photo).
-- **Zero_NovaPoshta**: `create_waybill` (the ТТН from the store's sender
-  branch to the order's branch, cash on delivery for the set payment
-  methods, then the order shipped with it; label links), `track_waybill`,
-  `delete_waybill`. Command `/ttn`.
-- **Zero_Checkbox**: `fiscal_receipts`, `send_fiscal_receipts` (the failed
-  and missing ones of an order, sent now; the failed ones reset as the
-  admin's Retry does, `Fiscalizer::retryErrors()`: under the receipt's
-  lock, a new id for a refused one; one locked at that moment is left as
-  it is and counted in `busy`; waiting ones keep their attempts), `cash_register`. Command `/receipts`.
-- **Zero_Ukrposhta**: `create_ukrposhta_shipment`, `delete_ukrposhta_shipment` (the order's Ukrposhta shipment, with the sticker link).
+| Bridge | Tools | Command |
+| --- | --- | --- |
+| Zero_BlogAiAssistant | `search_posts`, `get_post`, `list_blog_categories`, `save_post` (the body in Markdown becomes the post's Article component; a photo as the cover; drafts unless asked to publish), `list_comments`, `moderate_comments` | `/post topic`, `/comments` |
+| Zero_QuoteRequestAiAssistant | `list_quote_requests`, `get_quote_request`, `answer_quote_request` (prices per line and a note, the customer is emailed; or a decline) | `/quotes` |
+| Zero_ReturnsAiAssistant | `list_returns`, `get_return` (items, the conversation, the next statuses), `update_return` (status and/or a message, emailed) | `/returns` |
+| Zero_ReviewsAiAssistant | `list_reviews` (rating, verified purchase, photos), `moderate_reviews` | `/reviews` |
+| Zero_BannerAiAssistant | `list_banners`, `save_slide` (a slide's texts, period, position, its picture from an uploaded photo) | |
+| Zero_StagingAiAssistant (licensed) | `list_campaigns`, `schedule_change` (a product or category change from a start to an end: a sale, a renamed category, a product switched off for a period) | |
+| Zero_NovaPoshtaAiAssistant (licensed) | `create_waybill` (the ТТН from the store's sender branch to the order's branch, cash on delivery for the set payment methods, then the order shipped with it; label links), `track_waybill`, `delete_waybill` | `/ttn` |
+| Zero_UkrposhtaAiAssistant (licensed) | `create_ukrposhta_shipment`, `delete_ukrposhta_shipment` (the order's Ukrposhta shipment, with the sticker link) | |
+| Zero_CheckboxAiAssistant (licensed) | `fiscal_receipts`, `send_fiscal_receipts` (the failed and missing ones of an order, sent now; the failed ones reset as the admin's Retry does, `Fiscalizer::retryErrors()`: under the receipt's lock, a new id for a refused one; one locked at that moment is left as it is and counted in `busy`; waiting ones keep their attempts), `cash_register` | `/receipts` |
 
-Each set is there when its module is installed and enabled; without the module nothing of it is loaded, and no module is needed for the assistant itself.
-Other Zero modules can register tools and commands the same way.
+The Zero_Cms component tools (`list_cms_components`, `get_cms_components`,
+`save_cms_components`) stay here: Zero_Cms is a hard dependency.
+
+Tool names, ACL resources and areas are the ones the tools had before they
+moved, so roles, stored proposals and the connector keep working. The area
+resources `Zero_AiAssistant::area_*` stay in this module's `acl.xml`.
 
 ## Adding a tool
 
 A class implementing `Model\Tool\ToolInterface` (`ReadTool` for read-only
-ones), added to `Model\Tools`'s `tools` in a module's `etc/di.xml`.
+ones). The contract for tool authors is marked `@api`: `ToolInterface`,
+`ReadTool`, `Context`, `InputAclInterface`, `ReversibleInterface`,
+`Tool\Sales\Orders`, `Uploads` and `ModelHtml`.
+
+A tool for one of this module's own areas is added to `etc/di.xml` here.
+A tool for **another module** goes into a new bridge module
+`Zero_<Module>AiAssistant`, copied from an existing one (for example
+`Zero_ReturnsAiAssistant`), with plain constructor injection of that module's
+services (no ObjectManager):
+
+1. `module.xml`: `<sequence>` of `Zero_AiAssistant` and the module.
+   composer.json: both packages in `require`.
+2. `etc/di.xml`, in `Zero\AiAssistant\Model\Tools`:
+   - `tools`: one `<item name="tool_name" xsi:type="object" sortOrder="N">Vendor\Bridge\Model\Tool\X\Proxy</item>`
+     per tool. The `\Proxy` keeps a tool of a disabled module from ever being
+     built. `sortOrder` is the position in the list the model and the admin
+     see; it must be unique across **all** modules (the groups use
+     1010-1930 in steps of 10, core tools 10-260; take a free number).
+   - `requires`: `<item name="tool_name" xsi:type="string">Vendor_Module</item>`.
+     The tool shows only while that module is enabled. It is needed because
+     in an `app/code` install nothing stops a bridge from being enabled
+     while its module is off.
+3. Commands (optional), in `Zero\AiAssistant\Model\Commands`: `commands`
+   items with `label`, `text` (`{args}` and `[ ... ]` as above), `resource`,
+   `area`, `changes`, `example`, and `sort_order`; `requires` maps the
+   command to the module. **Order:** a command without `sort_order` comes
+   first and can override a built-in one with the same name; a command with
+   a positive `sort_order` comes after the built-in ones, in that order.
+4. Register the module in `app/etc/config.php` with the same value as the
+   module it bridges.
+
+`Test/Unit/Model/ToolPoolTest.php` and `PoolOrderTest.php` read every
+module's `di.xml` and fail on a `requires` key that is no tool, a repeated
+`sortOrder`, a tool class that does not exist, a bridge that does not
+sequence its module, or a class of another Zero module named in this
+module. `Zero_Core`'s `NoObjectManagerTest` fails on any use of the
+ObjectManager outside its allow-list.
 
 ## Tests
 
-`Test/Unit/Model/` (Markdown, the HTML cleaning, the commands, the bulk
+`Test/Unit/Model/` (the tool and command pools: ToolsTest, PoolOrderTest, ToolPoolTest; Markdown, the HTML cleaning, the commands, the bulk
 answer; Agent undo statuses and the undo lock, Bulk::undo taken once, the
 verbatim restore, the records' ACL of moderate_reviews, order card defaults,
 the reaper, retention, recent changes), `Test/Unit/Cron/` (the reap job's
@@ -310,6 +336,10 @@ page and buttons with Chat in the Admin off, the Undo card's messages);
 the e2e role's tools and commands, a message, the job page on its own). For a
 local run against a stand-in for the API: `zero_ai_assistant/dev/api_url` in
 core_config_data (not in the admin).
+
+PHPUnit 12 reads data providers from the `#[DataProvider('name')]` attribute
+(`PHPUnit\Framework\Attributes\DataProvider`) on a `public static` method,
+not from the old `@dataProvider` annotation; write new ones that way.
 
 ## Disabling or removing
 

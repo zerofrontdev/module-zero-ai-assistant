@@ -11,16 +11,19 @@ namespace Zero\AiAssistant\Model;
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Module\Manager as ModuleManager;
-use Magento\Framework\ObjectManagerInterface;
 use Zero\AiAssistant\Model\Tool\InputAclInterface;
 use Zero\AiAssistant\Model\Tool\ToolInterface;
 
 /**
  * The assistant's tools (etc/di.xml), those the signed-in admin user's role
  * allows: what Claude is offered, what the "What I can do" panel lists, and
- * what may run. `modules` holds the tools for other Zero modules (blog,
- * reviews…) as class names per module: made only when that module is
- * enabled, so the module itself needs nothing from the assistant.
+ * what may run.
+ *
+ * `tools` is a di.xml pool (item name => tool, ordered by the item's sortOrder,
+ * merged from every module's di.xml). `requires` maps an item name to the module
+ * that must be enabled for the tool to be offered: a tool of another Zero
+ * module is registered as a \Proxy item, so while that module is off the tool is
+ * not even built.
  */
 class Tools
 {
@@ -31,34 +34,31 @@ class Tools
     private ?array $all = null;
 
     /**
-     * @param ToolInterface[] $tools
-     * @param array<string, string[]> $modules Module name => tool class names
+     * @param ToolInterface[] $tools Item name => tool, in di.xml sortOrder
+     * @param array<string, string> $requires Item name => module name that must be enabled
      */
     public function __construct(
         private readonly AuthorizationInterface $authorization,
         private readonly ModuleManager $moduleManager,
-        private readonly ObjectManagerInterface $objectManager,
         private readonly array $tools = [],
-        private readonly array $modules = []
+        private readonly array $requires = []
     ) {
     }
 
     /**
-     * @return ToolInterface[] di.xml's tools, then the enabled modules' ones
+     * @return ToolInterface[] the pool's tools whose module (if any) is enabled, in pool order
      */
     private function all(): array
     {
         if ($this->all === null) {
-            $this->all = array_values($this->tools);
-            foreach ($this->modules as $module => $classes) {
-                if ($this->moduleManager->isEnabled((string) $module)) {
-                    foreach ((array) $classes as $class) {
-                        // A class the package does not ship (a licensed module's tools) is left out.
-                        if (!class_exists((string) $class)) {
-                            continue;
-                        }
-                        $this->all[] = $this->objectManager->get((string) $class);
-                    }
+            $this->all = [];
+            foreach ($this->tools as $key => $tool) {
+                if (!$tool instanceof ToolInterface) {
+                    continue;
+                }
+                $module = $this->requires[$key] ?? null;
+                if ($module === null || $module === '' || $this->moduleManager->isEnabled((string) $module)) {
+                    $this->all[] = $tool;
                 }
             }
         }

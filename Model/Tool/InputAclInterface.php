@@ -14,6 +14,8 @@ use Magento\Framework\Exception\LocalizedException;
  * stock grid's own check does (moderate_reviews: All Reviews unless every
  * review is pending). resource() stays what makes the tool visible;
  * Tools::authorize() checks this one before a preview or a run.
+ *
+ * @api
  */
 interface InputAclInterface
 {

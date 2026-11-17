@@ -15,21 +15,22 @@ use Magento\Framework\Module\Manager as ModuleManager;
  * whole request (the command's text, with what follows it in place of
  * {args}). The admin sees the request as sent. Each command shows only to
  * a role with its resource; the tools behind it check their own anyway.
- * More come from di.xml (Model\Commands's commands).
+ * More come from di.xml (Model\Commands's `commands` pool, merged from every
+ * module): an item may carry `sort_order` (a command with a positive one comes
+ * after the built-in ones, in that order; without one, before them) and, in
+ * `requires`, the module that must be enabled for it to show.
  */
 class Commands
 {
     /**
-     * @param array<string, array{label: string, text: string, resource?: string, example?: string, area?: string, changes?: bool}> $commands
-     */
-    /**
-     * @param array<string, array<string, array>> $modules Module name => its commands, used when it is enabled
+     * @param array<string, array{label: string, text: string, resource?: string, example?: string, area?: string, changes?: bool, sort_order?: int}> $commands
+     * @param array<string, string> $requires Command name => module name that must be enabled
      */
     public function __construct(
         private readonly AuthorizationInterface $authorization,
         private readonly ModuleManager $moduleManager,
         private readonly array $commands = [],
-        private readonly array $modules = []
+        private readonly array $requires = []
     ) {
     }
 
@@ -87,14 +88,52 @@ class Commands
      */
     private function all(): array
     {
-        $modules = [];
-        foreach ($this->modules as $module => $commands) {
-            if ($this->moduleManager->isEnabled((string) $module)) {
-                $modules += (array) $commands;
+        $early = [];
+        $late = [];
+        foreach ($this->enabled() as $name => $command) {
+            if ((int) ($command['sort_order'] ?? 0) > 0) {
+                $late[$name] = $command;
+            } else {
+                $early[$name] = $command;
             }
         }
+        $all = $early + $this->builtIn();
+        foreach ($late as $name => $command) {
+            $all[$name] = $command;
+        }
 
-        return $this->commands + [
+        return $all;
+    }
+
+    /**
+     * The pool's commands whose module (if any) is enabled, ordered by sort_order (equal ones as given).
+     *
+     * @return array<string, array>
+     */
+    private function enabled(): array
+    {
+        $enabled = [];
+        foreach ($this->commands as $name => $command) {
+            if (!is_array($command)) {
+                continue;
+            }
+            $module = $this->requires[$name] ?? null;
+            if ($module === null || $module === '' || $this->moduleManager->isEnabled((string) $module)) {
+                $enabled[$name] = $command;
+            }
+        }
+        // uasort is stable (PHP 8).
+        uasort($enabled, static fn (array $a, array $b) => (int) ($a['sort_order'] ?? 0) <=> (int) ($b['sort_order'] ?? 0));
+
+        return $enabled;
+    }
+
+    /**
+     * @return array<string, array>
+     */
+    private function builtIn(): array
+    {
+        return [
             'describe' => [
                 'area' => 'catalog',
                 'changes' => true,
@@ -159,6 +198,6 @@ class Commands
                 'resource' => 'Magento_Backend::cache',
                 'example' => '',
             ],
-        ] + $modules;
+        ];
     }
 }

@@ -13,6 +13,8 @@ use Zero\AiAssistant\Model\Conversations;
 
 /**
  * Whose conversation a tool works in, and its uploads.
+ *
+ * @api
  */
 class Context
 {

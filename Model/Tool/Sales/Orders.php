@@ -15,6 +15,8 @@ use Magento\Sales\Model\OrderFactory;
 
 /**
  * Orders by their number, and their money as the admin reads it.
+ *
+ * @api
  */
 class Orders
 {

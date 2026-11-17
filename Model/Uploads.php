@@ -16,6 +16,8 @@ use Magento\Framework\Filesystem;
  * Images uploaded into a conversation: kept in var/zero_ai_assistant (not
  * public; the chat shows them through the admin), sent to Claude scaled down,
  * copied into pub/media when a tool puts them on a product.
+ *
+ * @api
  */
 class Uploads
 {

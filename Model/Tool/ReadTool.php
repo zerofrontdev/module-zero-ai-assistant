@@ -10,6 +10,8 @@ namespace Zero\AiAssistant\Model\Tool;
 
 /**
  * A tool that only reads: run at once, nothing to confirm.
+ *
+ * @api
  */
 abstract class ReadTool implements ToolInterface
 {
